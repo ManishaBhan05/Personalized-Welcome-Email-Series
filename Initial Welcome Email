@@ -1,0 +1,59 @@
+%%[
+
+/* RETRIEVE FIELDS */
+SET @memberID = [MemberID]
+SET @firstName = [First Name]
+SET @venueID = [VenueID]
+
+/* NAME CLEANING */
+IF NOT EMPTY (@firstName) THEN
+   SET @firstNameTrim = Trim(@firstName)
+   SET @finalName = Propercase(@firstNameTrim)
+ELSE 
+   SET @finalName = "member"
+ENDIF
+
+/* LOOKUP ROW LOGIC TO RETRIEVE VENUE INFO */
+SET @rows = LookupRows("Venue", "VenueID", @venueID)
+
+SET @rowCount = rowcount(@rows)
+
+/* CHECKS IF THERE IS A ROW THAT EXISTS */
+IF @rowCount > 0 THEN
+
+  SET @row = row(@rows,1)
+  /* IF YOU WANT TO RETRIEVE MORE THAN 3 FIELDS, ADD MORE ROWS AS PER BELOW */
+  /* IF YOU WANT TO RETRIEVE LESS THAN 3 FIELDS, REMOVE ROWS AS PER BELOW */
+  SET @VenueName = field(@row, "VenueName")
+  SET @LogoURL = field(@row, "LogoURL")
+  SET @Address = field(@row, "Address")
+  SET @ContactInfo = field(@row, "ContactInfo")
+  SET @FacebookLink = field(@row, "FacebookLink")
+  SET @VenueManager = field(@row, "VenueManager")
+
+/* IF THE ROW DOES NOT EXIST */
+ELSE
+  
+  /* THIS FUNCTION WILL CANCEL THE EMAIL OR SMS SEND */
+  RaiseError("No row was found")  
+
+ENDIF
+
+/* LOGIC FOR DYNAMIC SUBJECT LINE */
+IF @finalName != "member" THEN
+    SET @subjectLine = Concat("Welcome to ", @finalVenueName, ", ", @finalName, "!")
+ELSE
+    SET @subjectLine = Concat("Welcome to ", @finalVenueName, "!")
+ENDIF
+
+/* CHECK IF "THE" ALREADY EXISTS AT THE START OF VENUE NAME */
+IF IndexOf(Lowercase(Trim(@VenueName)), "the ") == 1 THEN
+/* "THE" ALREADY EXISTS AT THE START */
+    SET @finalVenueName = Trim(@VenueName)
+ELSE
+/* ADD "THE" AT THE START */
+    SET @finalVenueName = Concat("The ", Trim(@VenueName))
+ENDIF
+
+
+]%%
